@@ -1,0 +1,136 @@
+<section class="orders light-section">
+  <div class="px-10 container mx-auto pt-12">
+    <div class="flex items-center justify-between mb-2">
+      <h1 class="font-bold text-2xl">Customer Requests</h1>
+      <div class="flex items-center gap-3">
+        <span id="newOrderBadge" class="hidden bg-red-500 text-white text-xs px-3 py-1 rounded-full font-bold animate-pulse">New Request!</span>
+        <span class="text-sm text-gray-500">Logged in as: <strong><%= user.businessName || user.name %></strong></span>
+      </div>
+    </div>
+    <p class="text-gray-500 mb-8">Manage and update the status of incoming laundry requests</p>
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <%
+        const pending = orders.filter(o => o.status === 'request_placed').length;
+        const active = orders.filter(o => ['confirmed','picked_up','washing','ready'].includes(o.status)).length;
+        const delivered = orders.filter(o => o.status === 'delivered').length;
+        const completed = orders.filter(o => o.status === 'completed').length;
+      %>
+      <div class="bg-yellow-50 rounded-xl p-4 text-center border border-yellow-100">
+        <p class="text-2xl font-bold text-yellow-600"><%= pending %></p>
+        <p class="text-xs text-yellow-500 font-semibold">Pending</p>
+      </div>
+      <div class="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
+        <p class="text-2xl font-bold text-blue-600"><%= active %></p>
+        <p class="text-xs text-blue-500 font-semibold">Active</p>
+      </div>
+      <div class="bg-purple-50 rounded-xl p-4 text-center border border-purple-100">
+        <p class="text-2xl font-bold text-purple-600"><%= delivered %></p>
+        <p class="text-xs text-purple-500 font-semibold">Delivered</p>
+      </div>
+      <div class="bg-green-50 rounded-xl p-4 text-center border border-green-100">
+        <p class="text-2xl font-bold text-green-600"><%= completed %></p>
+        <p class="text-xs text-green-500 font-semibold">Completed</p>
+      </div>
+    </div>
+
+    <% if (orders.length) { %>
+    <div class="space-y-4" id="requestsList">
+      <% orders.forEach(order => { %>
+      <div class="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow" id="order-<%= order._id %>">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-1">
+              <span class="text-xs text-gray-400 font-mono">#<%= order._id.toString().slice(-8).toUpperCase() %></span>
+              <span class="status-badge px-2 py-0.5 rounded-full text-xs font-bold
+                <%= order.status === 'completed' ? 'bg-green-100 text-green-700' :
+                   order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                   order.status === 'request_placed' ? 'bg-yellow-100 text-yellow-700' :
+                   'bg-blue-100 text-blue-700' %>">
+                <%= order.status.replace(/_/g,' ').toUpperCase() %>
+              </span>
+            </div>
+            <h3 class="font-bold text-lg text-gray-800"><%= order.customerId ? order.customerId.name : 'Customer' %></h3>
+            <p class="text-sm text-gray-500">📱 <%= order.phone %> &nbsp;|&nbsp; 📍 <%= order.address %></p>
+            <% if (order.pickupDate) { %><p class="text-sm text-gray-400">📅 Pickup: <%= order.pickupDate %></p><% } %>
+            <!-- Items list -->
+            <div class="mt-3 space-y-1">
+              <% order.items.forEach(item => { %>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600"><%= item.serviceName %> — <%= item.quantity %> <%= item.unit %></span>
+                <span class="font-semibold text-gray-800">₹<%= item.subtotal %></span>
+              </div>
+              <% }) %>
+            </div>
+            <% if (order.specialInstructions) { %>
+            <p class="text-xs text-gray-400 mt-2 italic">📝 <%= order.specialInstructions %></p>
+            <% } %>
+          </div>
+
+          <div class="flex flex-col items-end gap-3">
+            <span class="font-bold text-xl text-purple-700">₹<%= order.totalPrice %></span>
+            <p class="text-xs text-gray-400"><%= moment(order.createdAt).format('DD MMM, hh:mm A') %></p>
+            <!-- Status Update -->
+            <% if (!['completed','cancelled'].includes(order.status)) { %>
+            <select class="status-update border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-purple-400" data-orderid="<%= order._id %>">
+              <option value="">— Update Status —</option>
+              <option value="confirmed" <%= order.status === 'confirmed' ? 'selected':'' %>>✅ Confirm</option>
+              <option value="picked_up" <%= order.status === 'picked_up' ? 'selected':'' %>>🚚 Picked Up</option>
+              <option value="washing" <%= order.status === 'washing' ? 'selected':'' %>>🫧 Washing</option>
+              <option value="ready" <%= order.status === 'ready' ? 'selected':'' %>>✨ Ready</option>
+              <option value="delivered" <%= order.status === 'delivered' ? 'selected':'' %>>📦 Delivered</option>
+              <option value="completed" >🎉 Completed</option>
+              <option value="cancelled" >❌ Cancel</option>
+            </select>
+            <% } %>
+            <% if (order.rating) { %>
+            <div class="text-center">
+              <p class="text-xs text-gray-400">Customer Rating</p>
+              <p class="text-yellow-400 font-bold">⭐ <%= order.rating %>/5</p>
+              <% if (order.review) { %><p class="text-xs text-gray-400 italic max-w-xs">"<%= order.review %>"</p><% } %>
+            </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+    <% } else { %>
+    <div class="text-center py-20">
+      <div class="text-6xl mb-4">📭</div>
+      <h2 class="text-xl font-bold mb-2">No requests yet</h2>
+      <p class="text-gray-500">When customers book your services, their requests will appear here.</p>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('.status-update').forEach(sel => {
+  sel.addEventListener('change', async (e) => {
+    const status = e.target.value;
+    if (!status) return;
+    const orderId = e.target.dataset.orderid;
+    const res = await fetch('/provider/order/status', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ orderId, status })
+    });
+    if (res.ok) {
+      location.reload();
+    } else {
+      alert('Failed to update status');
+    }
+  });
+});
+
+let socket = io();
+const userId = '<%= user._id %>';
+socket.emit('join', `provider_${userId}`);
+
+socket.on('orderPlaced', (data) => {
+  document.getElementById('newOrderBadge').classList.remove('hidden');
+  setTimeout(() => location.reload(), 2000);
+});
+</script>

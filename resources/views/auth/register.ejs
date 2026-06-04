@@ -1,0 +1,93 @@
+<section class="login flex justify-center pt-12 pb-12">
+  <div class="w-full max-w-md px-4">
+    <form action="/register" method="post" class="bg-white shadow-md rounded-2xl px-8 pt-6 pb-8 mb-4">
+      <div class="text-center mb-6">
+        <div class="text-4xl mb-2">🧺</div>
+        <h2 class="text-2xl font-bold text-gray-800">Create Account</h2>
+        <p class="text-gray-500 text-sm">Join LaundryGo today</p>
+      </div>
+      <% if (messages.error) { %>
+      <div class="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4"><%= messages.error %></div>
+      <% } %>
+
+      <!-- Role Toggle -->
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">I am a:</label>
+        <div class="flex gap-3">
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="role" value="customer" checked class="hidden role-radio" id="roleCustomer"/>
+            <div class="role-btn text-center border-2 border-gray-200 rounded-xl py-3 px-4 transition-all" data-for="roleCustomer">
+              <div class="text-2xl">👤</div>
+              <div class="font-semibold text-sm mt-1">Customer</div>
+              <div class="text-xs text-gray-400">I need laundry done</div>
+            </div>
+          </label>
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="role" value="provider" class="hidden role-radio" id="roleProvider"/>
+            <div class="role-btn text-center border-2 border-gray-200 rounded-xl py-3 px-4 transition-all" data-for="roleProvider">
+              <div class="text-2xl">🏪</div>
+              <div class="font-semibold text-sm mt-1">Service Provider</div>
+              <div class="text-xs text-gray-400">I offer laundry services</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+        <input name="name" value="<%= messages.name %>" class="shadow appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="text" placeholder="Your Name" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">E-mail</label>
+        <input name="email" value="<%= messages.email %>" class="shadow appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="email" placeholder="Email" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+        <input name="password" class="shadow appearance-none border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="password" placeholder="******************" />
+      </div>
+
+      <!-- Provider-only fields -->
+      <div id="providerFields" class="hidden space-y-4 mb-4 p-4 bg-purple-50 rounded-xl">
+        <p class="text-xs font-bold text-purple-700 uppercase tracking-wide">Provider Details</p>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2">Business Name</label>
+          <input name="businessName" class="border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="text" placeholder="e.g. Shine Laundry Services" />
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2">Description</label>
+          <input name="description" class="border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="text" placeholder="Brief description of your services" />
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2">Phone</label>
+          <input name="phone" class="border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="text" placeholder="Contact number" />
+        </div>
+        <div>
+          <label class="block text-gray-700 text-sm font-bold mb-2">Service Area / Address</label>
+          <input name="address" class="border rounded-xl w-full py-2 px-3 text-gray-700 focus:outline-none focus:border-purple-400" type="text" placeholder="Your location / area served" />
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between mt-6">
+        <button type="submit" class="btn-primary rounded-full text-white font-bold py-2 px-6 focus:outline-none">Register</button>
+        <a class="inline-block align-baseline font-bold text-sm text-purple-600" href="/login">Already have an account?</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+  .role-btn.active { border-color: #6C63FF; background: #f5f3ff; }
+</style>
+<script>
+  const radios = document.querySelectorAll('.role-radio');
+  const providerFields = document.getElementById('providerFields');
+  radios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`.role-btn[data-for="${radio.id}"]`).classList.add('active');
+      providerFields.classList.toggle('hidden', radio.value !== 'provider');
+    });
+  });
+  // Set initial active state
+  document.querySelector('.role-btn[data-for="roleCustomer"]').classList.add('active');
+</script>

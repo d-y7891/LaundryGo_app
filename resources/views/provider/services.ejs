@@ -1,0 +1,113 @@
+<section class="container mx-auto px-10 py-8">
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold">My Services</h1>
+      <p class="text-gray-500">Manage the laundry services you offer</p>
+    </div>
+  </div>
+
+  <% if(messages.success) { %>
+    <div class="bg-green-100 text-green-700 p-4 rounded-xl mb-6">
+      <%= messages.success %>
+    </div>
+  <% } %>
+  <% if(messages.error) { %>
+    <div class="bg-red-100 text-red-700 p-4 rounded-xl mb-6">
+      <%= messages.error %>
+    </div>
+  <% } %>
+
+  <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+    <div class="p-6 border-b" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe)">
+      <h2 class="text-xl font-bold text-gray-800">Service Configuration</h2>
+    </div>
+    
+    <div class="p-6">
+      <form action="/provider/services" method="POST" id="servicesForm">
+        <div id="servicesContainer" class="space-y-4 mb-6">
+          <% if (user.services && user.services.length > 0) { %>
+            <% user.services.forEach((service, idx) => { %>
+              <div class="service-row flex gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <input type="text" name="services[<%= idx %>][name]" value="<%= service.name %>" placeholder="Service Name (e.g. Wash & Fold)" class="flex-1 border border-gray-300 rounded-xl px-4 py-2" required>
+                
+                <input type="number" name="services[<%= idx %>][price]" value="<%= service.unit === 'kg' ? service.pricePerKg : service.pricePerItem %>" placeholder="Rate" class="w-32 border border-gray-300 rounded-xl px-4 py-2" required>
+                
+                <select name="services[<%= idx %>][unit]" class="w-24 border border-gray-300 rounded-xl px-4 py-2">
+                  <option value="kg" <%= service.unit === 'kg' ? 'selected' : '' %>>/ kg</option>
+                  <option value="item" <%= service.unit === 'item' ? 'selected' : '' %>>/ item</option>
+                </select>
+                
+                <button type="button" class="remove-btn text-red-500 hover:text-red-700 px-2 text-xl font-bold">&times;</button>
+              </div>
+            <% }) %>
+          <% } else { %>
+              <div class="service-row flex gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <input type="text" name="services[0][name]" placeholder="Service Name (e.g. Wash & Fold)" class="flex-1 border border-gray-300 rounded-xl px-4 py-2" required>
+                <input type="number" name="services[0][price]" placeholder="Rate" class="w-32 border border-gray-300 rounded-xl px-4 py-2" required>
+                <select name="services[0][unit]" class="w-24 border border-gray-300 rounded-xl px-4 py-2">
+                  <option value="kg">/ kg</option>
+                  <option value="item">/ item</option>
+                </select>
+                <button type="button" class="remove-btn text-red-500 hover:text-red-700 px-2 text-xl font-bold">&times;</button>
+              </div>
+          <% } %>
+        </div>
+
+        <button type="button" id="addServiceBtn" class="text-purple-600 font-semibold mb-8 flex items-center hover:text-purple-800">
+          <span class="text-xl mr-2">+</span> Add Another Service
+        </button>
+
+        <div class="flex justify-end border-t pt-6">
+          <button type="submit" class="btn-primary text-white font-bold py-3 px-8 rounded-full shadow hover:shadow-lg transition-all">
+            Save Services
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('servicesContainer');
+    const addBtn = document.getElementById('addServiceBtn');
+    
+    let nextIndex = document.querySelectorAll('.service-row').length;
+
+    addBtn.addEventListener('click', () => {
+        const row = document.createElement('div');
+        row.className = 'service-row flex gap-4 items-center bg-gray-50 p-4 rounded-xl border border-gray-100 mt-4';
+        row.innerHTML = `
+            <input type="text" name="services[${nextIndex}][name]" placeholder="Service Name" class="flex-1 border border-gray-300 rounded-xl px-4 py-2" required>
+            <input type="number" name="services[${nextIndex}][price]" placeholder="Rate" class="w-32 border border-gray-300 rounded-xl px-4 py-2" required>
+            <select name="services[${nextIndex}][unit]" class="w-24 border border-gray-300 rounded-xl px-4 py-2">
+              <option value="kg">/ kg</option>
+              <option value="item">/ item</option>
+            </select>
+            <button type="button" class="remove-btn text-red-500 hover:text-red-700 px-2 text-xl font-bold">&times;</button>
+        `;
+        container.appendChild(row);
+        nextIndex++;
+    });
+
+    container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-btn')) {
+            const row = e.target.closest('.service-row');
+            if (document.querySelectorAll('.service-row').length > 1) {
+                row.remove();
+                
+                // Re-index names so they submit correctly as an array
+                const rows = document.querySelectorAll('.service-row');
+                rows.forEach((r, i) => {
+                    r.querySelector('input[name$="[name]"]').name = `services[${i}][name]`;
+                    r.querySelector('input[name$="[price]"]').name = `services[${i}][price]`;
+                    r.querySelector('select[name$="[unit]"]').name = `services[${i}][unit]`;
+                });
+                nextIndex = rows.length;
+            } else {
+                alert('You must have at least one service.');
+            }
+        }
+    });
+});
+</script>

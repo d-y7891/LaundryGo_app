@@ -1,0 +1,242 @@
+<!-- Hero -->
+<section class="hero">
+  <div class="container mx-auto flex items-center justify-between py-16 px-10">
+    <div class="w-1/2 px-6">
+      <h6 class="text-lg text-purple-500 font-semibold mb-2">Fresh & Clean, Every Time</h6>
+      <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">Your Laundry,<br/>Our Priority</h1>
+      <p class="text-gray-500 mb-6">Choose from trusted laundry service providers near you. Compare ratings, services & prices.</p>
+      <a href="#providers" class="px-8 py-3 rounded-full text-white font-bold btn-primary inline-block">Find Providers</a>
+    </div>
+    <div class="w-1/2 flex justify-center">
+      <div style="font-size:180px;line-height:1">🧺</div>
+    </div>
+  </div>
+</section>
+
+<!-- Provider Listing -->
+<section id="providers" class="container mx-auto px-10 py-8">
+  <h1 class="text-2xl font-bold mb-2">Available Service Providers</h1>
+  <p class="text-gray-500 mb-8">Pick a provider that suits your needs and budget</p>
+
+  <% if (locals.providers && providers.length) { %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% providers.forEach(provider => { %>
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      <!-- Provider Header -->
+      <div class="p-6 border-b" style="background: linear-gradient(135deg, #f5f3ff, #ede9fe)">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-3xl mb-2">🏪</div>
+            <h2 class="text-xl font-bold text-gray-800"><%= provider.businessName || provider.name %></h2>
+            <p class="text-gray-500 text-sm mt-1"><%= provider.description || 'Professional laundry service' %></p>
+          </div>
+          <!-- Rating Badge -->
+          <div class="flex flex-col items-center bg-white rounded-xl px-3 py-2 shadow-sm">
+            <span class="text-yellow-400 text-lg">★</span>
+            <span class="font-bold text-gray-800"><%= provider.rating > 0 ? provider.rating.toFixed(1) : 'New' %></span>
+            <span class="text-xs text-gray-400"><%= provider.ratingCount %> reviews</span>
+          </div>
+        </div>
+        <% if (provider.address) { %>
+        <p class="text-sm text-gray-500 mt-3">📍 <%= provider.address %></p>
+        <% } %>
+      </div>
+      <!-- Services -->
+      <div class="p-6">
+        <h3 class="font-bold text-sm text-gray-600 uppercase tracking-wide mb-3">Services & Pricing</h3>
+        <% if (provider.services && provider.services.length) { %>
+          <div class="space-y-2 mb-6">
+          <% provider.services.forEach(service => { %>
+            <div class="flex justify-between items-center text-sm">
+              <span class="text-gray-700"><%= service.name %></span>
+              <span class="font-semibold text-purple-700">
+                ₹<%= service.unit === 'kg' ? service.pricePerKg : service.pricePerItem %>/<%= service.unit %>
+              </span>
+            </div>
+          <% }) %>
+          </div>
+        <% } %>
+        <button 
+          data-provider="<%= JSON.stringify(provider) %>"
+          class="open-booking w-full btn-primary text-white py-2 px-4 rounded-full font-bold text-sm">
+          Book Now
+        </button>
+      </div>
+    </div>
+    <% }) %>
+  </div>
+  <% } else { %>
+  <div class="text-center py-20">
+    <div class="text-6xl mb-4">😕</div>
+    <h2 class="text-2xl font-bold mb-2">No providers available right now</h2>
+    <p class="text-gray-500">Check back later or register as a service provider!</p>
+    <a href="/register" class="inline-block mt-6 btn-primary px-8 py-3 rounded-full text-white font-bold">Become a Provider</a>
+  </div>
+  <% } %>
+</section>
+
+<!-- Booking Modal -->
+<div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-screen overflow-y-auto">
+    <div class="p-6 border-b flex justify-between items-center">
+      <h2 class="text-xl font-bold">Book Laundry Service</h2>
+      <button id="closeModal" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+    </div>
+    <div class="p-6">
+      <% if (!user) { %>
+        <div class="text-center py-8">
+          <p class="text-gray-500 mb-4">Please login to book a service</p>
+          <a href="/login" class="btn-primary px-8 py-3 rounded-full text-white font-bold">Login</a>
+        </div>
+      <% } else if (user.role === 'provider') { %>
+        <div class="text-center py-8">
+          <p class="text-gray-500">Providers cannot book services. Switch to a customer account.</p>
+        </div>
+      <% } else { %>
+      <div id="providerInfo" class="mb-6 p-4 bg-purple-50 rounded-xl"></div>
+      <!-- Service Items -->
+      <div id="serviceItems" class="mb-6"></div>
+      <button id="addServiceBtn" class="text-purple-600 text-sm font-semibold mb-6 flex items-center">
+        <span class="text-xl mr-2">+</span> Add Another Service
+      </button>
+      <div class="space-y-3">
+        <input id="bookPhone" type="text" placeholder="📱 Phone Number" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400" />
+        <input id="bookAddress" type="text" placeholder="📍 Pickup Address" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400" />
+        <input id="bookPickup" type="date" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400" />
+        <textarea id="bookInstructions" placeholder="Special instructions (optional)" rows="2" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400"></textarea>
+        <select id="bookPayment" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-purple-400">
+          <option value="COD">Cash on Delivery</option>
+          <option value="online">Pay Online</option>
+        </select>
+      </div>
+      <div class="mt-4 p-4 bg-gray-50 rounded-xl">
+        <div class="flex justify-between font-bold text-lg">
+          <span>Total Estimate:</span>
+          <span class="text-purple-700" id="totalPrice">₹0</span>
+        </div>
+      </div>
+      <button id="placeOrderBtn" class="w-full btn-primary text-white py-3 px-4 rounded-full font-bold mt-4">
+        Place Request
+      </button>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<form id="orderForm" action="/orders" method="POST" style="display:none">
+  <input type="hidden" name="providerId" id="formProviderId" />
+  <input type="hidden" name="phone" id="formPhone" />
+  <input type="hidden" name="address" id="formAddress" />
+  <input type="hidden" name="pickupDate" id="formPickupDate" />
+  <input type="hidden" name="specialInstructions" id="formInstructions" />
+  <input type="hidden" name="paymentType" id="formPayment" />
+  <input type="hidden" name="items" id="formItems" />
+</form>
+
+<script>
+let currentProvider = null;
+
+document.querySelectorAll('.open-booking').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentProvider = JSON.parse(btn.dataset.provider);
+    openBookingModal(currentProvider);
+  });
+});
+
+document.getElementById('closeModal')?.addEventListener('click', () => {
+  document.getElementById('bookingModal').classList.add('hidden');
+});
+
+function openBookingModal(provider) {
+  document.getElementById('bookingModal').classList.remove('hidden');
+  document.getElementById('providerInfo').innerHTML = `
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="font-bold text-gray-800">${provider.businessName || provider.name}</h3>
+        <p class="text-sm text-gray-500">${provider.description || ''}</p>
+      </div>
+      <div class="text-center">
+        <span class="text-yellow-400 text-lg">★</span>
+        <span class="font-bold ml-1">${provider.rating > 0 ? provider.rating.toFixed(1) : 'New'}</span>
+      </div>
+    </div>
+  `;
+  renderServiceItems();
+}
+
+let serviceRows = [];
+
+function renderServiceItems() {
+  const container = document.getElementById('serviceItems');
+  if (serviceRows.length === 0) addServiceRow();
+  container.innerHTML = serviceRows.map((row, i) => {
+    const services = currentProvider.services || [];
+    const opts = services.map((s, si) => `<option value="${si}" ${row.serviceIdx === si ? 'selected' : ''}>${s.name} - ₹${s.unit === 'kg' ? s.pricePerKg : s.pricePerItem}/${s.unit}</option>`).join('');
+    return `
+    <div class="flex gap-2 mb-3 items-center">
+      <select class="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm service-select" data-row="${i}">
+        ${opts}
+      </select>
+      <input type="number" min="0.5" step="0.5" value="${row.qty}" class="w-24 border border-gray-300 rounded-xl px-3 py-2 text-sm qty-input" data-row="${i}" placeholder="Qty" />
+      <span class="text-xs text-gray-400 w-8">${currentProvider.services && currentProvider.services[row.serviceIdx] ? currentProvider.services[row.serviceIdx].unit : 'kg'}</span>
+      ${serviceRows.length > 1 ? `<button class="remove-row text-red-400 text-lg" data-row="${i}">×</button>` : ''}
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.service-select').forEach(sel => {
+    sel.addEventListener('change', e => { serviceRows[+e.target.dataset.row].serviceIdx = +e.target.value; calcTotal(); });
+  });
+  container.querySelectorAll('.qty-input').forEach(inp => {
+    inp.addEventListener('input', e => { serviceRows[+e.target.dataset.row].qty = +e.target.value; calcTotal(); });
+  });
+  container.querySelectorAll('.remove-row').forEach(btn => {
+    btn.addEventListener('click', e => { serviceRows.splice(+e.target.dataset.row, 1); renderServiceItems(); });
+  });
+  calcTotal();
+}
+
+function addServiceRow() {
+  serviceRows.push({ serviceIdx: 0, qty: 1 });
+  if (currentProvider) renderServiceItems();
+}
+
+document.getElementById('addServiceBtn')?.addEventListener('click', addServiceRow);
+
+function calcTotal() {
+  if (!currentProvider || !currentProvider.services) return;
+  let total = 0;
+  serviceRows.forEach(row => {
+    const s = currentProvider.services[row.serviceIdx];
+    if (!s) return;
+    const price = s.unit === 'kg' ? s.pricePerKg : s.pricePerItem;
+    total += price * row.qty;
+  });
+  document.getElementById('totalPrice').textContent = '₹' + total.toFixed(2);
+}
+
+document.getElementById('placeOrderBtn')?.addEventListener('click', () => {
+  const phone = document.getElementById('bookPhone').value;
+  const address = document.getElementById('bookAddress').value;
+  if (!phone || !address) { alert('Phone and address are required'); return; }
+  if (!currentProvider || !currentProvider.services) return;
+
+  const items = serviceRows.map(row => {
+    const s = currentProvider.services[row.serviceIdx];
+    return {
+      serviceName: s.name,
+      quantity: row.qty,
+      unit: s.unit,
+      pricePerUnit: s.unit === 'kg' ? s.pricePerKg : s.pricePerItem
+    };
+  });
+
+  document.getElementById('formProviderId').value = currentProvider._id;
+  document.getElementById('formPhone').value = phone;
+  document.getElementById('formAddress').value = address;
+  document.getElementById('formPickupDate').value = document.getElementById('bookPickup').value;
+  document.getElementById('formInstructions').value = document.getElementById('bookInstructions').value;
+  document.getElementById('formPayment').value = document.getElementById('bookPayment').value;
+  document.getElementById('formItems').value = JSON.stringify(items);
+  document.getElementById('orderForm').submit();
+});
+</script>

@@ -1,0 +1,96 @@
+<section class="status py-12">
+  <div class="container mx-auto px-10">
+    <a href="/customer/orders" class="text-purple-600 text-sm font-semibold hover:underline mb-6 inline-block">← Back to Orders</a>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Status Tracker -->
+      <div class="bg-white rounded-2xl shadow-md p-8">
+        <div class="flex items-center justify-between mb-8">
+          <h1 class="text-xl font-bold">Track Your Laundry</h1>
+          <span class="bg-purple-100 text-purple-700 py-1 rounded-full px-4 text-xs font-mono">#<%= order._id.toString().slice(-8).toUpperCase() %></span>
+        </div>
+        <input id="hiddenInput" type="hidden" value="<%= JSON.stringify(order) %>" />
+
+        <ul class="space-y-0">
+          <li class="status_line pb-10" data-status="request_placed"><span>📋 Request Placed</span></li>
+          <li class="status_line pb-10" data-status="confirmed"><span>✅ Confirmed</span></li>
+          <li class="status_line pb-10" data-status="picked_up"><span>🚚 Picked Up</span></li>
+          <li class="status_line pb-10" data-status="washing"><span>🫧 Washing in Progress</span></li>
+          <li class="status_line pb-10" data-status="ready"><span>✨ Ready for Delivery</span></li>
+          <li class="status_line pb-10" data-status="delivered"><span>📦 Out for Delivery</span></li>
+          <li class="status_line" data-status="completed"><span>🎉 Completed</span></li>
+        </ul>
+      </div>
+
+      <!-- Order Details -->
+      <div class="space-y-4">
+        <!-- Provider Info -->
+        <div class="bg-white rounded-2xl shadow-md p-6">
+          <h2 class="font-bold text-gray-700 mb-3">Service Provider</h2>
+          <% if (order.providerId) { %>
+          <p class="font-bold text-lg"><%= order.providerId.businessName || order.providerId.name %></p>
+          <% if (order.providerId.phone) { %><p class="text-sm text-gray-500">📱 <%= order.providerId.phone %></p><% } %>
+          <% if (order.providerId.address) { %><p class="text-sm text-gray-500">📍 <%= order.providerId.address %></p><% } %>
+          <% } %>
+        </div>
+
+        <!-- Items -->
+        <div class="bg-white rounded-2xl shadow-md p-6">
+          <h2 class="font-bold text-gray-700 mb-3">Order Items</h2>
+          <% order.items.forEach(item => { %>
+          <div class="flex justify-between text-sm py-2 border-b last:border-0">
+            <div>
+              <p class="font-semibold"><%= item.serviceName %></p>
+              <p class="text-gray-400"><%= item.quantity %> <%= item.unit %> × ₹<%= item.pricePerUnit %></p>
+            </div>
+            <span class="font-bold text-purple-700">₹<%= item.subtotal %></span>
+          </div>
+          <% }) %>
+          <div class="flex justify-between font-bold text-lg pt-3">
+            <span>Total</span>
+            <span class="text-purple-700">₹<%= order.totalPrice %></span>
+          </div>
+        </div>
+
+        <!-- Pickup Info -->
+        <div class="bg-white rounded-2xl shadow-md p-6">
+          <h2 class="font-bold text-gray-700 mb-3">Pickup Details</h2>
+          <p class="text-sm text-gray-600">📱 <%= order.phone %></p>
+          <p class="text-sm text-gray-600">📍 <%= order.address %></p>
+          <% if (order.pickupDate) { %><p class="text-sm text-gray-600">📅 Pickup: <%= order.pickupDate %></p><% } %>
+          <% if (order.specialInstructions) { %><p class="text-sm text-gray-600 mt-2">📝 <%= order.specialInstructions %></p><% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+let statuses = document.querySelectorAll('.status_line');
+let hiddenInput = document.querySelector('#hiddenInput');
+let order = JSON.parse(hiddenInput.value);
+let time = document.createElement('small');
+
+const statusOrder = ['request_placed','confirmed','picked_up','washing','ready','delivered','completed'];
+
+function updateStatus(order) {
+  statuses.forEach(s => { s.classList.remove('step-completed','current'); });
+  const idx = statusOrder.indexOf(order.status);
+  statuses.forEach((status, i) => {
+    const dataProp = status.dataset.status;
+    const sIdx = statusOrder.indexOf(dataProp);
+    if (sIdx <= idx) status.classList.add('step-completed');
+    if (sIdx === idx && status.nextElementSibling) status.nextElementSibling.classList.add('current');
+  });
+}
+
+updateStatus(order);
+
+let socket = io();
+if (order) socket.emit('join', `order_${order._id}`);
+
+socket.on('orderUpdated', (data) => {
+  order.status = data.status;
+  updateStatus(order);
+});
+</script>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LaundryGo - Realtime Laundry Service</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/app.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <nav class="container px-10 mx-auto flex items-center justify-between py-4">
+      <div>
+        <a href="/" class="flex items-center">
+          <span class="text-2xl font-bold" style="color:#6C63FF">🧺 LaundryGo</span>
+        </a>
+      </div>
+      <div>
+        <ul class="flex items-center">
+          <% if (user) { %>
+            <% if (user.role === 'customer') { %>
+              <li class="ml-6 py-2"><a href="/" class="hover:text-purple-600">Find Providers</a></li>
+              <li class="ml-6 py-2"><a href="/customer/orders" class="hover:text-purple-600">My Orders</a></li>
+            <% } else { %>
+              <li class="ml-6 py-2"><a href="/provider/requests" class="hover:text-purple-600">Customer Requests</a></li>
+              <li class="ml-6 py-2"><a href="/provider/services" class="hover:text-purple-600">My Services</a></li>
+            <% } %>
+            <li class="ml-6 py-2 text-gray-500">Hi, <%= user.name %></li>
+            <li class="ml-6 py-2">
+              <form id="logout" action="/logout" method="POST">
+                <a onclick="document.getElementById('logout').submit()" href="#" class="btn-primary px-4 py-2 rounded-full text-white text-sm">Logout</a>
+              </form>
+            </li>
+          <% } else { %>
+            <li class="ml-6 py-2"><a href="/register" class="hover:text-purple-600">Register</a></li>
+            <li class="ml-6 py-2"><a href="/login" class="btn-primary px-4 py-2 rounded-full text-white text-sm">Login</a></li>
+          <% } %>
+        </ul>
+      </div>
+    </nav>
+    <%- body %>
+    <footer class="text-center text-gray-400 py-8 mt-12 border-t">
+      <p>&copy; 2024 LaundryGo. All rights reserved.</p>
+    </footer>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
