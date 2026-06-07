@@ -1,4 +1,4 @@
-# 🧺 LaundryGo - Realtime Laundry Service App
+#  🧺 LaundryGo - Realtime Laundry Service App
 
 A full-stack Node.js web app converted from a pizza delivery app into a **realtime laundry service platform** with two roles: **Customer** and **Service Provider**.
 
